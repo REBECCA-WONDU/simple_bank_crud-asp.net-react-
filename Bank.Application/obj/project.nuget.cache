@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "yLQFm2ZB68o=",
+  "success": true,
+  "projectFilePath": "E:\\bank-simpleCrud\\Bank.Application\\Bank.Application.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\MEKDIM\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.1\\microsoft.extensions.dependencyinjection.abstractions.10.0.1.nupkg.sha512",
+    "C:\\Users\\MEKDIM\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.1\\microsoft.extensions.logging.abstractions.10.0.1.nupkg.sha512",
+    "C:\\Users\\MEKDIM\\.nuget\\packages\\system.diagnostics.diagnosticsource\\10.0.1\\system.diagnostics.diagnosticsource.10.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,15 @@
+E:\bank-simpleCrud\Bank.Application\bin\Debug\net9.0\Bank.Application.deps.json
+E:\bank-simpleCrud\Bank.Application\bin\Debug\net9.0\Bank.Application.dll
+E:\bank-simpleCrud\Bank.Application\bin\Debug\net9.0\Bank.Application.pdb
+E:\bank-simpleCrud\Bank.Application\bin\Debug\net9.0\Bank.Domain.dll
+E:\bank-simpleCrud\Bank.Application\bin\Debug\net9.0\Bank.Domain.pdb
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\Bank.Application.csproj.AssemblyReference.cache
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\Bank.Application.GeneratedMSBuildEditorConfig.editorconfig
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\Bank.Application.AssemblyInfoInputs.cache
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\Bank.Application.AssemblyInfo.cs
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\Bank.Application.csproj.CoreCompileInputs.cache
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\Bank.App.D97C6606.Up2Date
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\Bank.Application.dll
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\refint\Bank.Application.dll
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\Bank.Application.pdb
+E:\bank-simpleCrud\Bank.Application\obj\Debug\net9.0\ref\Bank.Application.dll
