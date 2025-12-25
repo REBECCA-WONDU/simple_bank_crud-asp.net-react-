@@ -64,11 +64,14 @@ export const transactionAPI = {
   withdraw: (data: { accountId: number; amount: number; description: string }) =>
     api.post(`/accounts/${data.accountId}/withdraw`, data.amount),
 
-  transfer: (data: { fromAccountId: number; toAccountId: number; amount: number }) =>
+  transfer: (data: { fromAccountId: number; toAccountId?: number; toPhoneNumber?: string; amount: number }) =>
     api.post('/accounts/transfer', data),
 
   getTransactions: (accountId: number) =>
     api.get(`/accounts/${accountId}/transactions`),
+
+  lookupCustomer: (phoneNumber: string) =>
+    api.get(`/accounts/lookup/${phoneNumber}`),
 };
 
 export default api;

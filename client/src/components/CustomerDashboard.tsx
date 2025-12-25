@@ -18,12 +18,17 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
   const [transactionForm] = Form.useForm();
   const [transferForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [receiverName, setReceiverName] = useState<string | null>(null);
 
   const fetchTransactions = async () => {
     if (!currentCustomer) return;
     try {
       const response = await transactionAPI.getTransactions(currentCustomer.id);
-      setTransactions(response.data);
+      // Sort latest first
+      const sortedTransactions = (response.data || []).sort((a: any, b: any) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      setTransactions(sortedTransactions);
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
     }
@@ -132,7 +137,21 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
     }
   };
 
-  const handleTransfer = async (values: { toAccountId: number; amount: number }) => {
+  const handlePhoneChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const phone = e.target.value.replace(/\D/g, '');
+    if (phone.length >= 10) {
+      try {
+        const response = await transactionAPI.lookupCustomer(phone);
+        setReceiverName(response.data.fullName);
+      } catch (error) {
+        setReceiverName(null);
+      }
+    } else {
+      setReceiverName(null);
+    }
+  };
+
+  const handleTransfer = async (values: { toPhone: string; amount: number }) => {
     if (!currentCustomer) return;
     if (values.amount > currentCustomer.balance) {
       message.error('Insufficient balance for transfer!');
@@ -140,9 +159,10 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
     }
     setLoading(true);
     try {
+      const formattedPhone = values.toPhone.replace(/\D/g, '');
       await transactionAPI.transfer({
         fromAccountId: currentCustomer.id,
-        toAccountId: values.toAccountId,
+        toPhoneNumber: formattedPhone,
         amount: values.amount
       });
 
@@ -152,11 +172,12 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
       };
       setCurrentCustomer(updatedCustomer);
       transferForm.resetFields();
+      setReceiverName(null);
       fetchTransactions();
-      message.success(`Transferred ETB ${values.amount} to account ${values.toAccountId} successfully!`);
+      message.success(`Transferred ETB ${values.amount} successfully!`);
     } catch (error) {
       console.error(error);
-      message.error((error as any).response?.data || 'Transfer failed. Check the receiver ID.');
+      message.error((error as any).response?.data || 'Transfer failed. Check the phone number.');
     } finally {
       setLoading(false);
     }
@@ -423,11 +444,19 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                         className="max-w-md"
                       >
                         <Form.Item
-                          label="Receiver Account ID"
-                          name="toAccountId"
-                          rules={[{ required: true, message: 'Please enter receiver ID' }]}
+                          label="Receiver Phone Number"
+                          name="toPhone"
+                          rules={[
+                            { required: true, message: 'Please enter receiver phone number' },
+                            { pattern: /^[0-9]{10,}$/, message: 'Please enter a valid phone number' }
+                          ]}
+                          help={receiverName && <span className="text-blue-600 font-semibold">Receiver: {receiverName}</span>}
                         >
-                          <InputNumber size="large" className="w-full" placeholder="Enter Account ID" />
+                          <Input
+                            size="large"
+                            placeholder="Enter Phone Number"
+                            onChange={handlePhoneChange}
+                          />
                         </Form.Item>
                         <Form.Item
                           label="Amount to Transfer"

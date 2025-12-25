@@ -90,6 +90,14 @@ public class AccountsController : ControllerBase
         return Ok(transactions);
     }
 
+    [HttpGet("lookup/{phoneNumber}")]
+    public async Task<IActionResult> Lookup(string phoneNumber)
+    {
+        var customer = await _bankService.GetCustomerByPhoneAsync(phoneNumber);
+        if (customer == null) return NotFound("Customer not found");
+        return Ok(new { fullName = customer.FullName });
+    }
+
     [HttpPost("transfer")]
     public async Task<IActionResult> Transfer([FromBody] TransferDto dto)
     {

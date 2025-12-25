@@ -115,8 +115,19 @@ public class BankService
         var fromAccount = await _accountRepo.GetByIdAsync(dto.FromAccountId)
             ?? throw new Exception("Sender account not found");
         
-        var toAccount = await _accountRepo.GetByIdAsync(dto.ToAccountId)
-            ?? throw new Exception("Receiver account not found");
+        Account toAccount;
+
+        if (!string.IsNullOrEmpty(dto.ToPhoneNumber))
+        {
+            var customer = await _customerRepo.GetByPhoneNumberAsync(dto.ToPhoneNumber)
+                ?? throw new Exception("Receiver phone number not found");
+            toAccount = customer.Account ?? throw new Exception("Receiver has no account");
+        }
+        else
+        {
+            toAccount = await _accountRepo.GetByIdAsync(dto.ToAccountId)
+                ?? throw new Exception("Receiver account not found");
+        }
 
         if (fromAccount.Balance < dto.Amount)
             throw new Exception("Insufficient balance");
@@ -125,7 +136,7 @@ public class BankService
         fromAccount.Balance -= dto.Amount;
         await _transactionRepo.AddAsync(new Transaction
         {
-            AccountId = dto.FromAccountId,
+            AccountId = fromAccount.Id,
             Amount = dto.Amount,
             Type = "Transfer Out",
             Date = DateTime.UtcNow
@@ -135,7 +146,7 @@ public class BankService
         toAccount.Balance += dto.Amount;
         await _transactionRepo.AddAsync(new Transaction
         {
-            AccountId = dto.ToAccountId,
+            AccountId = toAccount.Id,
             Amount = dto.Amount,
             Type = "Transfer In",
             Date = DateTime.UtcNow
