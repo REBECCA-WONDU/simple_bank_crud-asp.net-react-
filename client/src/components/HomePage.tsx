@@ -1,6 +1,7 @@
 import { Button, Card } from 'antd';
 import { UserOutlined, BankOutlined } from '@ant-design/icons';
 import buildingImg from '../assets/building.png';
+import abayLogo from '../assets/abayLogo.jpg';
 
 interface HomePageProps {
   onSelectRole: (role: 'customer' | 'banker') => void;
@@ -25,9 +26,13 @@ function HomePage({ onSelectRole }: HomePageProps) {
       <div className="w-full lg:w-7/12 flex flex-col items-center justify-center p-8 relative">
         <div className="max-w-2xl w-full animate-in fade-in slide-in-from-right-8 duration-1000">
           <div className="mb-12 text-center">
-            <BankOutlined className="text-7xl text-blue-600 mb-6" />
-            <h1 className="text-5xl font-black text-gray-900 mb-3 tracking-tight">Welcome</h1>
-            <p className="text-gray-500 text-xl">Best-in-class banking service</p>
+            <img
+              src={abayLogo}
+              alt="Abay Bank Logo"
+              className="w-32 h-32 object-contain mx-auto mb-6 rounded-full shadow-lg border-2 border-blue-100"
+            />
+            <h1 className="text-5xl font-black text-gray-900 mb-2 tracking-tight">Welcome</h1>
+            <p className="text-gray-500 text-xl font-medium">SOURCE OF GREATNESS</p>
           </div>
 
           <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch">

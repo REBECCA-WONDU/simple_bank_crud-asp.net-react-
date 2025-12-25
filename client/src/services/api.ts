@@ -33,6 +33,7 @@ export const customerAPI = {
 export const bankerAPI = {
   getCustomers: () => api.get('/banker/customers'),
 
+  // Update customer information
   updateCustomer: (id: string, data: { fullName?: string; phoneNumber?: string }) =>
     api.put(`/banker/customer/${id}`, data),
 
@@ -55,19 +56,19 @@ export const accountAPI = {
 };
 
 // Transactions API
+// Transaction API
 export const transactionAPI = {
-  getAll: () => api.get('/Transactions'),
+  deposit: (data: { accountId: number; amount: number; description: string }) =>
+    api.post(`/accounts/${data.accountId}/deposit`, data.amount),
 
-  getByAccount: (accountId: string) =>
-    api.get(`/Transactions/account/${accountId}`),
+  withdraw: (data: { accountId: number; amount: number; description: string }) =>
+    api.post(`/accounts/${data.accountId}/withdraw`, data.amount),
 
-  getById: (id: string) => api.get(`/Transactions/${id}`),
+  transfer: (data: { fromAccountId: number; toAccountId: number; amount: number }) =>
+    api.post('/accounts/transfer', data),
 
-  deposit: (data: { accountId: string; amount: number; description?: string }) =>
-    api.post('/Transactions/deposit', data),
-
-  withdraw: (data: { accountId: string; amount: number; description?: string }) =>
-    api.post('/Transactions/withdraw', data),
+  getTransactions: (accountId: number) =>
+    api.get(`/accounts/${accountId}/transactions`),
 };
 
 export default api;

@@ -9,8 +9,8 @@ export const customerService = {
     },
 
     // Update customer information
-    updateCustomer: async (id: string, name: string, phone: string): Promise<Customer> => {
-        const response = await api.put(`/banker/customer/${id}`, {
+    updateCustomer: async (id: number, name: string, phone: string): Promise<Customer> => {
+        await api.put(`/banker/customer/${id}`, {
             fullName: name,
             phoneNumber: phone
         });
@@ -49,7 +49,7 @@ export const customerService = {
         } as any;
     },
 
-    deleteCustomer: async (id: string): Promise<void> => {
+    deleteCustomer: async (id: number): Promise<void> => {
         await api.delete(`/banker/customer/${id}`);
     }
 };

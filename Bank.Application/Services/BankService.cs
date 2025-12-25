@@ -109,6 +109,41 @@ public class BankService
 
         await _customerRepo.DeleteAsync(customer);
     }
+
+    public async Task TransferAsync(TransferDto dto)
+    {
+        var fromAccount = await _accountRepo.GetByIdAsync(dto.FromAccountId)
+            ?? throw new Exception("Sender account not found");
+        
+        var toAccount = await _accountRepo.GetByIdAsync(dto.ToAccountId)
+            ?? throw new Exception("Receiver account not found");
+
+        if (fromAccount.Balance < dto.Amount)
+            throw new Exception("Insufficient balance");
+
+        // Deduct from sender
+        fromAccount.Balance -= dto.Amount;
+        await _transactionRepo.AddAsync(new Transaction
+        {
+            AccountId = dto.FromAccountId,
+            Amount = dto.Amount,
+            Type = "Transfer Out",
+            Date = DateTime.UtcNow
+        });
+
+        // Add to receiver
+        toAccount.Balance += dto.Amount;
+        await _transactionRepo.AddAsync(new Transaction
+        {
+            AccountId = dto.ToAccountId,
+            Amount = dto.Amount,
+            Type = "Transfer In",
+            Date = DateTime.UtcNow
+        });
+
+        await _accountRepo.UpdateAsync(fromAccount);
+        await _accountRepo.UpdateAsync(toAccount);
+    }
     // Login Helper
     public async Task<BankerCustomerDto?> GetCustomerByPhoneAsync(string phoneNumber)
     {

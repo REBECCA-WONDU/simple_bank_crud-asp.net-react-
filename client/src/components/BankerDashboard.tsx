@@ -3,6 +3,7 @@ import { Button, Card, Form, Input, message, Modal, Space, Statistic, Table } fr
 import { ArrowLeftOutlined, BankOutlined, DeleteOutlined, EditOutlined, DollarOutlined } from '@ant-design/icons';
 import { customerService } from '../services/customerService';
 import { Customer } from '../types/customer';
+import abayLogo from '../assets/abayLogo.jpg';
 
 interface BankerDashboardProps {
   onBack: () => void;
@@ -62,6 +63,7 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
         setIsModalVisible(false);
         setEditingCustomer(null);
         form.resetFields();
+        fetchCustomers();
       }
     } catch (error) {
       message.error('Failed to update customer');
@@ -116,7 +118,7 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
       title: 'Balance',
       dataIndex: 'balance',
       key: 'balance',
-      render: (balance: number) => `$${balance.toFixed(2)}`,
+      render: (balance: number) => `ETB ${balance.toFixed(2)}`,
       sorter: (a: Customer, b: Customer) => a.balance - b.balance,
     },
     {
@@ -169,10 +171,10 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center mb-2">
-                <BankOutlined className="text-3xl text-blue-600 mr-3" />
+                <img src={abayLogo} alt="Abay Bank Logo" className="w-12 h-12 rounded-full mr-4 border border-gray-200 shadow-sm" />
                 <h1 className="text-3xl font-bold text-gray-800">Banker Portal</h1>
               </div>
-              <p className="text-gray-600">Manage customer accounts and view all transactions</p>
+              <p className="text-gray-600">SOURCE OF GREATNESS - Manage customer accounts and view all transactions</p>
             </div>
           </div>
         </Card>
@@ -191,7 +193,7 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
               title="Total Bank Balance"
               value={totalBalance}
               precision={2}
-              prefix="$"
+              prefix="ETB"
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -200,7 +202,7 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
               title="Average Balance"
               value={customers.length > 0 ? totalBalance / customers.length : 0}
               precision={2}
-              prefix="$"
+              prefix="ETB"
               valueStyle={{ color: '#722ed1' }}
             />
           </Card>

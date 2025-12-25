@@ -1,9 +1,9 @@
-// In CustomerDashboard.tsx
-import { useState } from 'react';
-import { Button, Card, Form, Input, InputNumber, message, Space, Statistic, Tabs } from 'antd';
-import { ArrowLeftOutlined, UserOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { Button, Card, Form, Input, InputNumber, message, Space, Statistic, Tabs, Table, Tag } from 'antd';
+import { ArrowLeftOutlined, HistoryOutlined, SendOutlined, WalletOutlined } from '@ant-design/icons';
 import { Customer } from '../types/customer';
 import { customerAPI, transactionAPI } from '../services/api';
+import abayLogo from '../assets/abayLogo.jpg';
 
 interface CustomerDashboardProps {
   onBack: () => void;
@@ -12,12 +12,28 @@ interface CustomerDashboardProps {
 function CustomerDashboard({ onBack }: CustomerDashboardProps) {
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const [isLoginView, setIsLoginView] = useState(true);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loginForm] = Form.useForm();
   const [createForm] = Form.useForm();
   const [transactionForm] = Form.useForm();
+  const [transferForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // Removed auto-select useEffect
+  const fetchTransactions = async () => {
+    if (!currentCustomer) return;
+    try {
+      const response = await transactionAPI.getTransactions(currentCustomer.id);
+      setTransactions(response.data);
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (currentCustomer) {
+      fetchTransactions();
+    }
+  }, [currentCustomer]);
 
   const handleCreateAccount = async (values: { name: string; phone: string; initialBalance: number }) => {
     setLoading(true);
@@ -60,7 +76,8 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
       };
       setCurrentCustomer(updatedCustomer);
       transactionForm.resetFields();
-      message.success(`Deposited $${values.amount} successfully!`);
+      fetchTransactions();
+      message.success(`Deposited ETB ${values.amount} successfully!`);
     } catch (error) {
       console.error(error);
       message.error('Deposit failed');
@@ -89,7 +106,8 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
       };
       setCurrentCustomer(updatedCustomer);
       transactionForm.resetFields();
-      message.success(`Withdrawn $${values.amount} successfully!`);
+      fetchTransactions();
+      message.success(`Withdrawn ETB ${values.amount} successfully!`);
     } catch (error) {
       console.error(error);
       message.error('Withdrawal failed');
@@ -114,6 +132,65 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
     }
   };
 
+  const handleTransfer = async (values: { toAccountId: number; amount: number }) => {
+    if (!currentCustomer) return;
+    if (values.amount > currentCustomer.balance) {
+      message.error('Insufficient balance for transfer!');
+      return;
+    }
+    setLoading(true);
+    try {
+      await transactionAPI.transfer({
+        fromAccountId: currentCustomer.id,
+        toAccountId: values.toAccountId,
+        amount: values.amount
+      });
+
+      const updatedCustomer = {
+        ...currentCustomer,
+        balance: currentCustomer.balance - values.amount
+      };
+      setCurrentCustomer(updatedCustomer);
+      transferForm.resetFields();
+      fetchTransactions();
+      message.success(`Transferred ETB ${values.amount} to account ${values.toAccountId} successfully!`);
+    } catch (error) {
+      console.error(error);
+      message.error((error as any).response?.data || 'Transfer failed. Check the receiver ID.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const transactionColumns = [
+    {
+      title: 'Date',
+      dataIndex: 'date',
+      key: 'date',
+      render: (date: string) => new Date(date).toLocaleString(),
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
+      render: (type: string) => (
+        <Tag color={type.includes('In') || type === 'Deposit' ? 'green' : 'red'}>
+          {type}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'amount',
+      key: 'amount',
+      render: (amount: number) => (
+        <span className="font-semibold text-lg">
+          ETB {amount.toFixed(2)}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 p-8">
       <div className="max-w-4xl mx-auto">
@@ -128,10 +205,10 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
 
         <Card className="shadow-xl mb-6">
           <div className="flex items-center mb-4">
-            <UserOutlined className="text-3xl text-green-600 mr-3" />
+            <img src={abayLogo} alt="Abay Bank Logo" className="w-12 h-12 rounded-full mr-4 border border-gray-200 shadow-sm" />
             <h1 className="text-3xl font-bold text-gray-800">Customer Portal</h1>
           </div>
-          <p className="text-gray-600">Manage your account and transactions</p>
+          <p className="text-gray-600">SOURCE OF GREATNESS - Manage your account and transactions</p>
         </Card>
 
         {!currentCustomer ? (
@@ -199,7 +276,7 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                         size="large"
                         className="w-full"
                         placeholder="Enter initial deposit amount"
-                        prefix="$"
+                        prefix="ETB"
                         min={0}
                       />
                     </Form.Item>
@@ -245,7 +322,7 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                   title={<span className="text-green-100 text-lg">Current Balance</span>}
                   value={currentCustomer.balance}
                   precision={2}
-                  prefix="$"
+                  prefix="ETB"
                   valueStyle={{ color: 'white', fontSize: '36px', fontWeight: 'bold' }}
                 />
               </div>
@@ -257,7 +334,7 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                 items={[
                   {
                     key: 'deposit',
-                    label: 'Deposit Money',
+                    label: <span><WalletOutlined /> Deposit</span>,
                     children: (
                       <Form
                         form={transactionForm}
@@ -277,7 +354,7 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                             size="large"
                             className="w-full"
                             placeholder="Enter amount"
-                            prefix="$"
+                            prefix="ETB"
                             min={0}
                           />
                         </Form.Item>
@@ -297,7 +374,7 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                   },
                   {
                     key: 'withdraw',
-                    label: 'Withdraw Money',
+                    label: <span><ArrowLeftOutlined rotate={-45} /> Withdraw</span>,
                     children: (
                       <Form
                         layout="vertical"
@@ -316,7 +393,7 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                             size="large"
                             className="w-full"
                             placeholder="Enter amount"
-                            prefix="$"
+                            prefix="ETB"
                             min={0}
                           />
                         </Form.Item>
@@ -333,6 +410,66 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                           </Button>
                         </Form.Item>
                       </Form>
+                    ),
+                  },
+                  {
+                    key: 'transfer',
+                    label: <span><SendOutlined /> Send Money</span>,
+                    children: (
+                      <Form
+                        form={transferForm}
+                        layout="vertical"
+                        onFinish={handleTransfer}
+                        className="max-w-md"
+                      >
+                        <Form.Item
+                          label="Receiver Account ID"
+                          name="toAccountId"
+                          rules={[{ required: true, message: 'Please enter receiver ID' }]}
+                        >
+                          <InputNumber size="large" className="w-full" placeholder="Enter Account ID" />
+                        </Form.Item>
+                        <Form.Item
+                          label="Amount to Transfer"
+                          name="amount"
+                          rules={[
+                            { required: true, message: 'Please enter amount' },
+                            { type: 'number', min: 0.01, message: 'Amount must be greater than 0' }
+                          ]}
+                        >
+                          <InputNumber
+                            size="large"
+                            className="w-full"
+                            placeholder="Enter amount"
+                            prefix="ETB"
+                            min={0}
+                          />
+                        </Form.Item>
+                        <Form.Item>
+                          <Button
+                            type="primary"
+                            htmlType="submit"
+                            size="large"
+                            className="w-full bg-blue-600"
+                            loading={loading}
+                          >
+                            Transfer Now
+                          </Button>
+                        </Form.Item>
+                      </Form>
+                    ),
+                  },
+                  {
+                    key: 'history',
+                    label: <span><HistoryOutlined /> Transaction History</span>,
+                    children: (
+                      <Table
+                        dataSource={transactions}
+                        columns={transactionColumns}
+                        rowKey="id"
+                        pagination={{ pageSize: 5 }}
+                        className="mt-4"
+                      />
                     ),
                   },
                 ]}

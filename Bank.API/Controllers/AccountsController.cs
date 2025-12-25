@@ -1,4 +1,6 @@
 using Bank.Application.Interfaces;
+using Bank.Application.DTOs;
+using Bank.Application.Services;
 using Bank.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,13 +12,16 @@ public class AccountsController : ControllerBase
 {
     private readonly IAccountRepository _accountRepo;
     private readonly ITransactionRepository _transactionRepo;
+    private readonly BankService _bankService;
 
     public AccountsController(
         IAccountRepository accountRepo,
-        ITransactionRepository transactionRepo)
+        ITransactionRepository transactionRepo,
+        BankService bankService)
     {
         _accountRepo = accountRepo;
         _transactionRepo = transactionRepo;
+        _bankService = bankService;
     }
 
     [HttpGet("{id}")]
@@ -83,5 +88,19 @@ public class AccountsController : ControllerBase
     {
         var transactions = await _transactionRepo.GetByAccountIdAsync(id);
         return Ok(transactions);
+    }
+
+    [HttpPost("transfer")]
+    public async Task<IActionResult> Transfer([FromBody] TransferDto dto)
+    {
+        try 
+        {
+            await _bankService.TransferAsync(dto);
+            return Ok("Transfer successful");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

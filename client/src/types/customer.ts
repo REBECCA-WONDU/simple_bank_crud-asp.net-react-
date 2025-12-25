@@ -1,12 +1,7 @@
 export interface Customer {
-  id: string;
+  id: number;
   fullName: string;
   phoneNumber: string;
   balance: number;
   createdAt: string;
-  accounts?: Array<{
-    id: string;
-    balance: number;
-    accountNumber: string;
-  }>;
 }
