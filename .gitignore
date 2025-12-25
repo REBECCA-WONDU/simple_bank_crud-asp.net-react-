@@ -1,0 +1,19 @@
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Node.js
+node_modules/
+dist/
+.env
+
+# IDEs
+.vs/
+.vscode/
+
+# Build artifacts
+client/dist/
+client/node_modules/
