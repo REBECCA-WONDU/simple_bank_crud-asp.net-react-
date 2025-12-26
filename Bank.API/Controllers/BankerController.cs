@@ -23,8 +23,8 @@ public class BankerController : ControllerBase
     [HttpPut("customer/{id}")]
     public async Task<IActionResult> Update(int id, UpdateCustomerDto dto)
     {
-        await _service.UpdateCustomerAsync(id, dto);
-        return Ok("Updated");
+        var updatedCustomer = await _service.UpdateCustomerAsync(id, dto);
+        return Ok(updatedCustomer);
     }
 
     [HttpDelete("customer/{id}")]

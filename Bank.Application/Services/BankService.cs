@@ -91,7 +91,7 @@ public class BankService
         }).ToList();
     }
 
-    public async Task UpdateCustomerAsync(int id, UpdateCustomerDto dto)
+    public async Task<BankerCustomerDto> UpdateCustomerAsync(int id, UpdateCustomerDto dto)
     {
         var customer = await _customerRepo.GetByIdAsync(id)
             ?? throw new Exception("Customer not found");
@@ -100,6 +100,15 @@ public class BankService
         customer.PhoneNumber = dto.PhoneNumber;
 
         await _customerRepo.UpdateAsync(customer);
+
+        return new BankerCustomerDto
+        {
+            Id = customer.Id,
+            FullName = customer.FullName,
+            PhoneNumber = customer.PhoneNumber,
+            Balance = customer.Account?.Balance ?? 0,
+            CreatedAt = DateTime.UtcNow // Placeholder
+        };
     }
 
     public async Task DeleteCustomerAsync(int id)
