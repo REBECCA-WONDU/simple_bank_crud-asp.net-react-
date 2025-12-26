@@ -11,10 +11,8 @@ interface CustomerDashboardProps {
 
 function CustomerDashboard({ onBack }: CustomerDashboardProps) {
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
-  const [isLoginView, setIsLoginView] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loginForm] = Form.useForm();
-  const [createForm] = Form.useForm();
   const [transactionForm] = Form.useForm();
   const [transferForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -127,7 +125,6 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
       const formattedPhone = values.phone.replace(/\D/g, '');
       const response = await customerAPI.login(formattedPhone);
       setCurrentCustomer(response.data);
-      setIsLoginView(false);
       message.success('Welcome back!');
     } catch (error) {
       console.error(error);
@@ -234,93 +231,28 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
 
         {!currentCustomer ? (
           <div className="flex flex-col gap-6">
-            <Card title={isLoginView ? "Login to Your Account" : "Create New Account"} className="shadow-lg max-w-md mx-auto w-full">
-              {isLoginView ? (
-                <Form
-                  form={loginForm}
-                  layout="vertical"
-                  onFinish={handleLogin}
+            <Card title="Login to Your Account" className="shadow-lg max-w-md mx-auto w-full">
+              <Form
+                form={loginForm}
+                layout="vertical"
+                onFinish={handleLogin}
+              >
+                <Form.Item
+                  label="Phone Number"
+                  name="phone"
+                  rules={[{ required: true, message: 'Please enter your phone number' }]}
                 >
-                  <Form.Item
-                    label="Phone Number"
-                    name="phone"
-                    rules={[{ required: true, message: 'Please enter your phone number' }]}
-                  >
-                    <Input size="large" placeholder="Enter your registered phone number" />
-                  </Form.Item>
-                  <Form.Item>
-                    <Button type="primary" htmlType="submit" size="large" className="w-full bg-blue-600" loading={loading}>
-                      Login
-                    </Button>
-                  </Form.Item>
-                  <div className="text-center mt-4">
-                    <Button type="link" onClick={() => setIsLoginView(false)}>
-                      New here? Create an account
-                    </Button>
-                  </div>
-                </Form>
-              ) : (
-                <>
-                  <Form
-                    form={createForm}
-                    layout="vertical"
-                    onFinish={handleCreateAccount}
-                  >
-                    <Form.Item
-                      label="Full Name"
-                      name="name"
-                      rules={[{ required: true, message: 'Please enter your name' }]}
-                    >
-                      <Input size="large" placeholder="Enter your full name" />
-                    </Form.Item>
-
-                    <Form.Item
-                      label="Phone Number"
-                      name="phone"
-                      rules={[
-                        { required: true, message: 'Please enter your phone number' },
-                        { pattern: /^[0-9]{10,}$/, message: 'Please enter a valid phone number' }
-                      ]}
-                    >
-                      <Input size="large" placeholder="Enter your phone number" />
-                    </Form.Item>
-
-                    <Form.Item
-                      label="Initial Balance"
-                      name="initialBalance"
-                      rules={[
-                        { required: true, message: 'Please enter initial balance' },
-                        { type: 'number', min: 0, message: 'Balance must be positive' }
-                      ]}
-                    >
-                      <InputNumber
-                        size="large"
-                        className="w-full"
-                        placeholder="Enter initial deposit amount"
-                        prefix="ETB"
-                        min={0}
-                      />
-                    </Form.Item>
-
-                    <Form.Item>
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        size="large"
-                        className="w-full bg-green-600 hover:bg-green-700"
-                        loading={loading}
-                      >
-                        Create Account
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                  <div className="text-center mt-4">
-                    <Button type="link" onClick={() => setIsLoginView(true)}>
-                      Already have an account? Login
-                    </Button>
-                  </div>
-                </>
-              )}
+                  <Input size="large" placeholder="Enter your registered phone number" />
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit" size="large" className="w-full bg-blue-600" loading={loading}>
+                    Login
+                  </Button>
+                </Form.Item>
+                <div className="text-center mt-4 text-gray-500">
+                  <p>Don't have an account? Please contact an Abay Bank branch or authorized representative to open one.</p>
+                </div>
+              </Form>
             </Card>
           </div>
         ) : (
@@ -510,8 +442,7 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
               size="large"
               onClick={() => {
                 setCurrentCustomer(null);
-                setIsLoginView(true);
-                createForm.resetFields();
+                loginForm.resetFields();
                 transactionForm.resetFields();
               }}
               className="w-full"

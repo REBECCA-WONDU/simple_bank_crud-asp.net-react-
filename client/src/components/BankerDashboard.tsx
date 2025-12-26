@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Form, Input, message, Modal, Space, Statistic, Table } from 'antd';
+import { Button, Card, Form, Input, InputNumber, message, Modal, Space, Statistic, Table } from 'antd';
 import { ArrowLeftOutlined, BankOutlined, DeleteOutlined, EditOutlined, DollarOutlined } from '@ant-design/icons';
 import { customerService } from '../services/customerService';
 import { Customer } from '../types/customer';
@@ -14,8 +14,10 @@ interface BankerDashboardProps {
 function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardProps) {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [createForm] = Form.useForm();
 
   useEffect(() => {
     fetchCustomers();
@@ -46,27 +48,23 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
   };
 
   const handleUpdate = async (values: { name: string; phone: string }) => {
-    if (!editingCustomer) return;
+    // ... logic remains same
+  };
+
+  const handleCreate = async (values: { name: string; phone: string; initialBalance: number }) => {
     setLoading(true);
     try {
-      const updatedCustomer = await customerService.updateCustomer(
-        editingCustomer.id,
-        values.name,
-        values.phone
-      );
-      if (updatedCustomer) {
-        const updatedCustomers = customers.map(c =>
-          c.id === editingCustomer.id ? { ...c, ...updatedCustomer } : c
-        );
-        setCustomers(updatedCustomers);
-        message.success('Customer information updated successfully!');
-        setIsModalVisible(false);
-        setEditingCustomer(null);
-        form.resetFields();
-        fetchCustomers();
-      }
+      const newCustomer = await customerService.createCustomer({
+        fullName: values.name,
+        phoneNumber: values.phone,
+        balance: values.initialBalance
+      });
+      setCustomers([...customers, newCustomer]);
+      message.success('Customer account created successfully!');
+      setIsCreateModalVisible(false);
+      createForm.resetFields();
     } catch (error) {
-      message.error('Failed to update customer');
+      message.error((error as any).response?.data || 'Failed to create customer');
       console.error(error);
     } finally {
       setLoading(false);
@@ -176,6 +174,14 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
               </div>
               <p className="text-gray-600">SOURCE OF GREATNESS - Manage customer accounts and view all transactions</p>
             </div>
+            <Button
+              type="primary"
+              size="large"
+              className="bg-green-600 hover:bg-green-700 h-12 px-8 rounded-xl font-bold"
+              onClick={() => setIsCreateModalVisible(true)}
+            >
+              Add New Customer
+            </Button>
           </div>
         </Card>
 
@@ -273,6 +279,69 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
                 </Button>
                 <Button type="primary" htmlType="submit" className="bg-blue-600 hover:bg-blue-700" loading={loading}>
                   Update Customer
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        <Modal
+          title="Create New Customer Account"
+          open={isCreateModalVisible}
+          onCancel={() => {
+            setIsCreateModalVisible(false);
+            createForm.resetFields();
+          }}
+          footer={null}
+        >
+          <Form
+            form={createForm}
+            layout="vertical"
+            onFinish={handleCreate}
+          >
+            <Form.Item
+              label="Full Name"
+              name="name"
+              rules={[{ required: true, message: 'Please enter customer name' }]}
+            >
+              <Input size="large" placeholder="Enter customer name" />
+            </Form.Item>
+
+            <Form.Item
+              label="Phone Number"
+              name="phone"
+              rules={[
+                { required: true, message: 'Please enter phone number' },
+                { pattern: /^[0-9]{10,}$/, message: 'Please enter a valid phone number' }
+              ]}
+            >
+              <Input size="large" placeholder="Enter phone number" />
+            </Form.Item>
+
+            <Form.Item
+              label="Initial Balance"
+              name="initialBalance"
+              rules={[
+                { required: true, message: 'Please enter initial balance' },
+                { type: 'number', min: 0, message: 'Balance must be positive' }
+              ]}
+            >
+              <InputNumber
+                size="large"
+                className="w-full"
+                placeholder="Enter initial deposit amount"
+                prefix="ETB"
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Space className="w-full justify-end">
+                <Button onClick={() => setIsCreateModalVisible(false)}>
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit" className="bg-green-600 hover:bg-green-700" loading={loading}>
+                  Create Account
                 </Button>
               </Space>
             </Form.Item>

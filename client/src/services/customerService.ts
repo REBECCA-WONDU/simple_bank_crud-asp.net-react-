@@ -51,5 +51,11 @@ export const customerService = {
 
     deleteCustomer: async (id: number): Promise<void> => {
         await api.delete(`/banker/customer/${id}`);
+    },
+
+    // Create a new customer
+    createCustomer: async (data: { fullName: string; phoneNumber: string; balance: number }): Promise<Customer> => {
+        const response = await api.post('/customers', data);
+        return response.data;
     }
 };
