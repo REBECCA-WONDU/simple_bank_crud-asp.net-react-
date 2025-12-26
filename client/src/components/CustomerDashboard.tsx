@@ -38,30 +38,6 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
     }
   }, [currentCustomer]);
 
-  const handleCreateAccount = async (values: { name: string; phone: string; initialBalance: number }) => {
-    setLoading(true);
-    try {
-      // Format phone number (remove any non-digit characters)
-      const formattedPhone = values.phone.replace(/\D/g, '');
-
-      const response = await customerAPI.create({
-        fullName: values.name.trim(),
-        phoneNumber: formattedPhone,
-        balance: Number(values.initialBalance)
-      });
-
-      const newCustomer = response.data;
-      setCurrentCustomer(newCustomer);
-      setIsLoginView(false);
-      createForm.resetFields();
-      message.success('Account created successfully!');
-    } catch (error) {
-      console.error('Create account error:', error);
-      message.error((error as any).response?.data?.message || 'Failed to create account');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeposit = async (values: { amount: number }) => {
     if (!currentCustomer) return;
