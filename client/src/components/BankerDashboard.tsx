@@ -48,7 +48,30 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
   };
 
   const handleUpdate = async (values: { name: string; phone: string }) => {
-    // ... logic remains same
+    if (!editingCustomer) return;
+    setLoading(true);
+    try {
+      const updatedCustomer = await customerService.updateCustomer(
+        editingCustomer.id,
+        values.name,
+        values.phone
+      );
+      if (updatedCustomer) {
+        const updatedCustomers = customers.map(c =>
+          c.id === editingCustomer.id ? { ...c, ...updatedCustomer } : c
+        );
+        setCustomers(updatedCustomers);
+        message.success('Customer information updated successfully!');
+        setIsModalVisible(false);
+        setEditingCustomer(null);
+        form.resetFields();
+      }
+    } catch (error) {
+      message.error('Failed to update customer');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreate = async (values: { name: string; phone: string; initialBalance: number }) => {
