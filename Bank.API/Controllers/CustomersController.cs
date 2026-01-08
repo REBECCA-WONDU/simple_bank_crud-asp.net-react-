@@ -47,12 +47,19 @@ public class CustomerController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
-        var customer = await _service.GetCustomerByPhoneAsync(loginDto.PhoneNumber);
-        if (customer == null)
-            return NotFound("Customer not found");
-            
-        return Ok(customer);
+        try 
+        {
+            var customer = await _service.LoginAsync(loginDto.PhoneNumber, loginDto.Password);
+            return Ok(customer);
+        }
+        catch (Exception ex)
+        {
+            return Unauthorized(ex.Message);
+        }
     }
 }
 
-public class LoginDto { public string PhoneNumber { get; set; } }
+public class LoginDto { 
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}

@@ -39,72 +39,17 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
   }, [currentCustomer]);
 
 
-  const handleDeposit = async (values: { amount: number }) => {
-    if (!currentCustomer) return;
-    setLoading(true);
-    try {
-      // Using the transaction API for deposit
-      await transactionAPI.deposit({
-        accountId: currentCustomer.id,
-        amount: values.amount,
-        description: 'Deposit'
-      });
-      const updatedCustomer = {
-        ...currentCustomer,
-        balance: currentCustomer.balance + values.amount
-      };
-      setCurrentCustomer(updatedCustomer);
-      transactionForm.resetFields();
-      fetchTransactions();
-      message.success(`Deposited ETB ${values.amount} successfully!`);
-    } catch (error) {
-      console.error(error);
-      message.error('Deposit failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleWithdraw = async (values: { amount: number }) => {
-    if (!currentCustomer) return;
-    if (values.amount > currentCustomer.balance) {
-      message.error('Insufficient balance!');
-      return;
-    }
-    setLoading(true);
-    try {
-      // Using the transaction API for withdrawal
-      await transactionAPI.withdraw({
-        accountId: currentCustomer.id,
-        amount: values.amount,
-        description: 'Withdrawal'
-      });
-      const updatedCustomer = {
-        ...currentCustomer,
-        balance: currentCustomer.balance - values.amount
-      };
-      setCurrentCustomer(updatedCustomer);
-      transactionForm.resetFields();
-      fetchTransactions();
-      message.success(`Withdrawn ETB ${values.amount} successfully!`);
-    } catch (error) {
-      console.error(error);
-      message.error('Withdrawal failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async (values: { phone: string }) => {
+  const handleLogin = async (values: { phone: string; password: string }) => {
     setLoading(true);
     try {
       const formattedPhone = values.phone.replace(/\D/g, '');
-      const response = await customerAPI.login(formattedPhone);
+      const response = await customerAPI.login(formattedPhone, values.password);
       setCurrentCustomer(response.data);
       message.success('Welcome back!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      message.error('Customer not found with this phone number.');
+      const errorMsg = error.response?.data || 'Invalid phone number or password.';
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -220,6 +165,13 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                 >
                   <Input size="large" placeholder="Enter your registered phone number" />
                 </Form.Item>
+                <Form.Item
+                  label="Password"
+                  name="password"
+                  rules={[{ required: true, message: 'Please enter your password' }]}
+                >
+                  <Input.Password size="large" placeholder="Enter your password" />
+                </Form.Item>
                 <Form.Item>
                   <Button type="primary" htmlType="submit" size="large" className="w-full bg-blue-600" loading={loading}>
                     Login
@@ -259,88 +211,8 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
 
             <Card className="shadow-lg">
               <Tabs
-                defaultActiveKey="deposit"
+                defaultActiveKey="transfer"
                 items={[
-                  {
-                    key: 'deposit',
-                    label: <span><WalletOutlined /> Deposit</span>,
-                    children: (
-                      <Form
-                        form={transactionForm}
-                        layout="vertical"
-                        onFinish={handleDeposit}
-                        className="max-w-md"
-                      >
-                        <Form.Item
-                          label="Amount to Deposit"
-                          name="amount"
-                          rules={[
-                            { required: true, message: 'Please enter amount' },
-                            { type: 'number', min: 0.01, message: 'Amount must be greater than 0' }
-                          ]}
-                        >
-                          <InputNumber
-                            size="large"
-                            className="w-full"
-                            placeholder="Enter amount"
-                            prefix="ETB"
-                            min={0}
-                          />
-                        </Form.Item>
-                        <Form.Item>
-                          <Button
-                            type="primary"
-                            htmlType="submit"
-                            size="large"
-                            className="w-full bg-green-600 hover:bg-green-700"
-                            loading={loading}
-                          >
-                            Deposit Money
-                          </Button>
-                        </Form.Item>
-                      </Form>
-                    ),
-                  },
-                  {
-                    key: 'withdraw',
-                    label: <span><ArrowLeftOutlined rotate={-45} /> Withdraw</span>,
-                    children: (
-                      <Form
-                        layout="vertical"
-                        onFinish={handleWithdraw}
-                        className="max-w-md"
-                      >
-                        <Form.Item
-                          label="Amount to Withdraw"
-                          name="amount"
-                          rules={[
-                            { required: true, message: 'Please enter amount' },
-                            { type: 'number', min: 0.01, message: 'Amount must be greater than 0' }
-                          ]}
-                        >
-                          <InputNumber
-                            size="large"
-                            className="w-full"
-                            placeholder="Enter amount"
-                            prefix="ETB"
-                            min={0}
-                          />
-                        </Form.Item>
-                        <Form.Item>
-                          <Button
-                            type="primary"
-                            danger
-                            htmlType="submit"
-                            size="large"
-                            className="w-full"
-                            loading={loading}
-                          >
-                            Withdraw Money
-                          </Button>
-                        </Form.Item>
-                      </Form>
-                    ),
-                  },
                   {
                     key: 'transfer',
                     label: <span><SendOutlined /> Send Money</span>,

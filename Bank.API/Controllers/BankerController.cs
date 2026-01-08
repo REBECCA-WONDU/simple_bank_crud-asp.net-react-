@@ -33,5 +33,33 @@ public class BankerController : ControllerBase
         await _service.DeleteCustomerAsync(id);
         return Ok("Deleted");
     }
+
+    [HttpPost("deposit/{id}")]
+    public async Task<IActionResult> Deposit(int id, [FromBody] TransactionDto dto)
+    {
+        try 
+        {
+            await _service.DepositByCustomerIdAsync(id, dto.Amount);
+            return Ok("Deposit successful");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("withdraw/{id}")]
+    public async Task<IActionResult> Withdraw(int id, [FromBody] TransactionDto dto)
+    {
+        try 
+        {
+            await _service.WithdrawByCustomerIdAsync(id, dto.Amount);
+            return Ok("Withdraw successful");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }
 }

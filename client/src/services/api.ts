@@ -17,9 +17,9 @@ api.interceptors.response.use(response => {
 
 // Customer API
 export const customerAPI = {
-  login: (phoneNumber: string) => api.post('/customer/login', { phoneNumber }),
+  login: (phoneNumber: string, password: string) => api.post('/customer/login', { phoneNumber, password }),
 
-  create: (data: { fullName: string; phoneNumber: string; balance: number }) =>
+  create: (data: { fullName: string; phoneNumber: string; password: string; balance: number }) =>
     api.post('/customer/create', data),
 
   deposit: (accountId: string, amount: number) =>
@@ -39,6 +39,12 @@ export const bankerAPI = {
 
   deleteCustomer: (id: string) =>
     api.delete(`/banker/customer/${id}`),
+
+  deposit: (id: number, amount: number) =>
+    api.post(`/banker/deposit/${id}`, { amount }),
+
+  withdraw: (id: number, amount: number) =>
+    api.post(`/banker/withdraw/${id}`, { amount }),
 };
 
 // Account API

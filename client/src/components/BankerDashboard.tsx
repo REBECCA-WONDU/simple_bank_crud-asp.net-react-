@@ -16,8 +16,14 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  //Ant Design form instances for validation and resetting fields
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
+  const [transactionForm] = Form.useForm();
+
+  const [transactionModalVisible, setTransactionModalVisible] = useState(false);
+  const [transactionType, setTransactionType] = useState<'deposit' | 'withdraw'>('deposit');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -74,12 +80,13 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
     }
   };
 
-  const handleCreate = async (values: { name: string; phone: string; initialBalance: number }) => {
+  const handleCreate = async (values: { name: string; phone: string; password: string; initialBalance: number }) => {
     setLoading(true);
     try {
       const newCustomer = await customerService.createCustomer({
         fullName: values.name,
         phoneNumber: values.phone,
+        password: values.password,
         balance: values.initialBalance
       });
       setCustomers([...customers, newCustomer]);
@@ -88,6 +95,40 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
       createForm.resetFields();
     } catch (error) {
       message.error((error as any).response?.data || 'Failed to create customer');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTransaction = async (values: { amount: number }) => {
+    if (!selectedCustomer) return;
+    setLoading(true);
+    try {
+      if (transactionType === 'deposit') {
+        await customerService.deposit(selectedCustomer.id, values.amount);
+        message.success(`Deposited ETB ${values.amount} to ${selectedCustomer.fullName}`);
+      } else {
+        if (values.amount > selectedCustomer.balance) {
+          message.error('Insufficient balance');
+          setLoading(false);
+          return;
+        }
+        await customerService.withdraw(selectedCustomer.id, values.amount);
+        message.success(`Withdrawn ETB ${values.amount} from ${selectedCustomer.fullName}`);
+      }
+
+      // Update local state
+      const updatedCustomers = customers.map(c =>
+        c.id === selectedCustomer.id
+          ? { ...c, balance: transactionType === 'deposit' ? c.balance + values.amount : c.balance - values.amount }
+          : c
+      );
+      setCustomers(updatedCustomers);
+      setTransactionModalVisible(false);
+      transactionForm.resetFields();
+    } catch (error) {
+      message.error(`Failed to ${transactionType}`);
       console.error(error);
     } finally {
       setLoading(false);
@@ -161,6 +202,32 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
             size="small"
           >
             Edit
+          </Button>
+          <Button
+            type="primary"
+            className="bg-green-600 hover:bg-green-700"
+            icon={<DollarOutlined />}
+            onClick={() => {
+              setSelectedCustomer(record);
+              setTransactionType('deposit');
+              setTransactionModalVisible(true);
+            }}
+            size="small"
+          >
+            Deposit
+          </Button>
+          <Button
+            type="primary"
+            className="bg-orange-500 hover:bg-orange-600 border-none"
+            icon={<DollarOutlined />}
+            onClick={() => {
+              setSelectedCustomer(record);
+              setTransactionType('withdraw');
+              setTransactionModalVisible(true);
+            }}
+            size="small"
+          >
+            Withdraw
           </Button>
           <Button
             type="primary"
@@ -342,6 +409,14 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
             </Form.Item>
 
             <Form.Item
+              label="Password"
+              name="password"
+              rules={[{ required: true, message: 'Please set a password' }]}
+            >
+              <Input.Password size="large" placeholder="Set customer password" />
+            </Form.Item>
+
+            <Form.Item
               label="Initial Balance"
               name="initialBalance"
               rules={[
@@ -365,6 +440,62 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
                 </Button>
                 <Button type="primary" htmlType="submit" className="bg-green-600 hover:bg-green-700" loading={loading}>
                   Create Account
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        <Modal
+          title={transactionType === 'deposit' ? 'Deposit Money' : 'Withdraw Money'}
+          open={transactionModalVisible}
+          onCancel={() => {
+            setTransactionModalVisible(false);
+            setSelectedCustomer(null);
+            transactionForm.resetFields();
+          }}
+          footer={null}
+        >
+          {selectedCustomer && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+              <p className="mb-1 text-gray-600">Customer: <strong>{selectedCustomer.fullName}</strong></p>
+              <p className="text-gray-600">Current Balance: <strong>ETB {selectedCustomer.balance.toFixed(2)}</strong></p>
+            </div>
+          )}
+          <Form
+            form={transactionForm}
+            layout="vertical"
+            onFinish={handleTransaction}
+          >
+            <Form.Item
+              label="Amount"
+              name="amount"
+              rules={[
+                { required: true, message: 'Please enter amount' },
+                { type: 'number', min: 0.01, message: 'Amount must be greater than 0' }
+              ]}
+            >
+              <InputNumber
+                size="large"
+                className="w-full"
+                placeholder="Enter amount"
+                prefix="ETB"
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Space className="w-full justify-end">
+                <Button onClick={() => setTransactionModalVisible(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  className={transactionType === 'deposit' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600 border-none'}
+                  loading={loading}
+                >
+                  Confirm {transactionType === 'deposit' ? 'Deposit' : 'Withdraw'}
                 </Button>
               </Space>
             </Form.Item>

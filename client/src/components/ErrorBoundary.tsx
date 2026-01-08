@@ -1,8 +1,8 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react'; //ErrorInfo → extra information about where the error happened
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
+  fallback?: ReactNode;//optional UI shown when an error happens
 }
 
 interface State {
@@ -20,7 +20,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error("Uncaught error:", error, errorInfo);//Runs after the error is caught Used for:logging
   }
 
   public render() {

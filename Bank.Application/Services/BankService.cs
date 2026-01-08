@@ -27,6 +27,7 @@ public class BankService
         {
             FullName = dto.FullName,
             PhoneNumber = dto.PhoneNumber,
+            Password = dto.Password,
             Account = new Account
             {
                 Balance = dto.Balance
@@ -70,10 +71,33 @@ public class BankService
         {
             AccountId = accountId,
             Amount = amount,
-            Type = "Withdraw"
+            Type = "Withdraw",
+            Date = DateTime.UtcNow
         });
 
         await _accountRepo.UpdateAsync(account);
+    }
+
+    public async Task DepositByCustomerIdAsync(int customerId, decimal amount)
+    {
+        var customer = await _customerRepo.GetByIdAsync(customerId)
+            ?? throw new Exception("Customer not found");
+        
+        if (customer.Account == null)
+            throw new Exception("Customer has no account");
+
+        await DepositAsync(customer.Account.Id, amount);
+    }
+
+    public async Task WithdrawByCustomerIdAsync(int customerId, decimal amount)
+    {
+        var customer = await _customerRepo.GetByIdAsync(customerId)
+            ?? throw new Exception("Customer not found");
+        
+        if (customer.Account == null)
+            throw new Exception("Customer has no account");
+
+        await WithdrawAsync(customer.Account.Id, amount);
     }
 
     // BANKER
@@ -106,6 +130,7 @@ public class BankService
             Id = customer.Id,
             FullName = customer.FullName,
             PhoneNumber = customer.PhoneNumber,
+            Password = customer.Password,
             Balance = customer.Account?.Balance ?? 0,
             CreatedAt = DateTime.UtcNow // Placeholder
         };
@@ -165,6 +190,23 @@ public class BankService
         await _accountRepo.UpdateAsync(toAccount);
     }
     // Login Helper
+    public async Task<BankerCustomerDto?> LoginAsync(string phoneNumber, string password)
+    {
+        var customer = await _customerRepo.GetByPhoneNumberAsync(phoneNumber);
+        if (customer == null) throw new Exception("Phone number not found");
+        if (customer.Password != password) throw new Exception("Incorrect password");
+
+        return new BankerCustomerDto
+        {
+            Id = customer.Id,
+            FullName = customer.FullName,
+            PhoneNumber = customer.PhoneNumber,
+            Password = customer.Password,
+            Balance = customer.Account.Balance,
+            CreatedAt = DateTime.UtcNow // Placeholder
+        };
+    }
+
     public async Task<BankerCustomerDto?> GetCustomerByPhoneAsync(string phoneNumber)
     {
         var customer = await _customerRepo.GetByPhoneNumberAsync(phoneNumber);
@@ -175,6 +217,7 @@ public class BankService
             Id = customer.Id,
             FullName = customer.FullName,
             PhoneNumber = customer.PhoneNumber,
+            Password = customer.Password,
             Balance = customer.Account.Balance,
             CreatedAt = DateTime.UtcNow // Placeholder
         };

@@ -35,7 +35,10 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    });
+    });//ReferenceHandler.Preserve Prevents infinite loops when serializing entities with relationships Example: Customer → Account → Customer → Account
+//WhenWritingNull
+//Null properties are not sent in JSON
+//Cleaner API responses
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();

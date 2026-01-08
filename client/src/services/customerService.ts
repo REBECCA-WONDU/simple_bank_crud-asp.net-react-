@@ -22,8 +22,18 @@ export const customerService = {
     },
 
     // Create a new customer
-    createCustomer: async (data: { fullName: string; phoneNumber: string; balance: number }): Promise<Customer> => {
+    createCustomer: async (data: { fullName: string; phoneNumber: string; password: string; balance: number }): Promise<Customer> => {
         const response = await api.post('/customer/create', data);
         return response.data;
+    },
+
+    // Banker deposit
+    deposit: async (id: number, amount: number): Promise<void> => {
+        await api.post(`/banker/deposit/${id}`, { amount });
+    },
+
+    // Banker withdraw
+    withdraw: async (id: number, amount: number): Promise<void> => {
+        await api.post(`/banker/withdraw/${id}`, { amount });
     }
 };
