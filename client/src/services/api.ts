@@ -48,6 +48,9 @@ export const bankerAPI = {
 
   withdraw: (id: number, amount: number) =>
     api.post(`/banker/withdraw/${id}`, { amount }),
+
+  getDailyStats: (days: number = 7) =>
+    api.get(`/banker/stats/daily?days=${days}`),
 };
 
 // Account API

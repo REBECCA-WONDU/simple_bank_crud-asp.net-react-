@@ -251,4 +251,22 @@ public class BankService
             CreatedAt = DateTime.UtcNow // Placeholder
         };
     }
+
+    public async Task<List<TransactionStatsDto>> GetDailyTransactionStatsAsync(int days = 7)
+    {
+        var transactions = await _transactionRepo.GetAllAsync();
+        var startDate = DateTime.UtcNow.Date.AddDays(-(days - 1));
+
+        return transactions
+            .Where(t => t.Date >= startDate)
+            .GroupBy(t => t.Date.Date)
+            .Select(g => new TransactionStatsDto
+            {
+                Date = g.Key.ToString("yyyy-MM-dd"),
+                Count = g.Count(),
+                TotalAmount = g.Sum(t => t.Amount)
+            })
+            .OrderBy(s => s.Date)
+            .ToList();
+    }
 }

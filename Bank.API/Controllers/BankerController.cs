@@ -75,6 +75,20 @@ namespace Bank.API.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("stats/daily")]
+        public async Task<IActionResult> GetDailyStats([FromQuery] int days = 7)
+        {
+            try
+            {
+                var stats = await _service.GetDailyTransactionStatsAsync(days);
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 
     public class UpdateStatusDto

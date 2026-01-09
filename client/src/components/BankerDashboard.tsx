@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, InputNumber, message, Modal, Space, Statistic, Table, Tag } from 'antd';
-import { ArrowLeftOutlined, BankOutlined, DeleteOutlined, EditOutlined, DollarOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, BankOutlined, DeleteOutlined, EditOutlined, DollarOutlined, LineChartOutlined } from '@ant-design/icons';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { customerService } from '../services/customerService';
 import { bankerAPI } from '../services/api';
 import { Customer } from '../types/customer';
@@ -25,10 +26,21 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
   const [transactionModalVisible, setTransactionModalVisible] = useState(false);
   const [transactionType, setTransactionType] = useState<'deposit' | 'withdraw'>('deposit');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [dailyStats, setDailyStats] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCustomers();
+    fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await bankerAPI.getDailyStats(7);
+      setDailyStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -326,23 +338,70 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
           </div>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <Card className="shadow-lg border-l-4 border-blue-500">
-            <Statistic
-              title="Active Customers"
-              value={activeCustomers}
-              prefix={<BankOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-          <Card className="shadow-lg border-l-4 border-red-500">
-            <Statistic
-              title="Frozen Accounts"
-              value={frozenCustomers}
-              prefix={<DeleteOutlined />}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+          <div className="lg:col-span-3">
+            <Card title={<span><LineChartOutlined /> Daily Transaction Volume (Last 7 Days)</span>} className="shadow-lg h-full">
+              <div style={{ width: '100%', height: 300 }}>
+                <ResponsiveContainer>
+                  <AreaChart data={dailyStats}>
+                    <defs>
+                      <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#1890ff" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#1890ff" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#8c8c8c', fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#8c8c8c', fontSize: 12 }}
+                      tickFormatter={(value) => `ETB ${value}`}
+                    />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                      formatter={(value: any) => [`ETB ${value.toLocaleString()}`, 'Total Volume']}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="totalAmount"
+                      stroke="#1890ff"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorAmount)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </div>
+          <div className="flex flex-col gap-6">
+            <Card className="shadow-lg border-l-4 border-blue-500 flex-1">
+              <Statistic
+                title="Active Customers"
+                value={activeCustomers}
+                prefix={<BankOutlined />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+            <Card className="shadow-lg border-l-4 border-red-500 flex-1">
+              <Statistic
+                title="Frozen Accounts"
+                value={frozenCustomers}
+                prefix={<DeleteOutlined />}
+                valueStyle={{ color: '#ff4d4f' }}
+              />
+            </Card>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Card className="shadow-lg">
             <Statistic
               title="Total Bank Balance"
