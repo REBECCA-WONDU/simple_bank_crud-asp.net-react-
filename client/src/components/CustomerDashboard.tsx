@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, Card, Form, Input, InputNumber, message, Space, Statistic, Tabs, Table, Tag } from 'antd';
-import { ArrowLeftOutlined, HistoryOutlined, SendOutlined, WalletOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, HistoryOutlined, SendOutlined } from '@ant-design/icons';
 import { Customer } from '../types/customer';
 import { customerAPI, transactionAPI } from '../services/api';
 import abayLogo from '../assets/abayLogo.jpg';
@@ -191,7 +191,12 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                 <div>
                   <p className="text-green-100 mb-1">Account Holder</p>
                   <h2 className="text-2xl font-bold">{currentCustomer.fullName}</h2>
-                  <p className="text-green-100 mt-2 text-sm">Account ID: {currentCustomer.id}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <p className="text-green-100 text-sm">Account ID: {currentCustomer.id}</p>
+                    <Tag color={currentCustomer.status === 'Frozen' ? 'red' : currentCustomer.status === 'Inactive' ? 'orange' : 'green'}>
+                      {currentCustomer.status ? currentCustomer.status.toUpperCase() : 'ACTIVE'}
+                    </Tag>
+                  </div>
                 </div>
                 <div>
                   <div className="text-2xl font-semibold mb-4">Welcome, {currentCustomer.fullName}!</div>
@@ -261,8 +266,9 @@ function CustomerDashboard({ onBack }: CustomerDashboardProps) {
                             size="large"
                             className="w-full bg-blue-600"
                             loading={loading}
+                            disabled={currentCustomer.status === 'Frozen'}
                           >
-                            Transfer Now
+                            {currentCustomer.status === 'Frozen' ? 'Account Frozen' : 'Transfer Now'}
                           </Button>
                         </Form.Item>
                       </Form>

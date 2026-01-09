@@ -3,5 +3,6 @@ export interface Customer {
   fullName: string;
   phoneNumber: string;
   balance: number;
+  status: string;
   createdAt: string;
 }

@@ -40,6 +40,9 @@ export const bankerAPI = {
   deleteCustomer: (id: string) =>
     api.delete(`/banker/customer/${id}`),
 
+  updateStatus: (id: number, status: string) =>
+    api.patch(`/banker/customer/${id}/status`, { status }),
+
   deposit: (id: number, amount: number) =>
     api.post(`/banker/deposit/${id}`, { amount }),
 

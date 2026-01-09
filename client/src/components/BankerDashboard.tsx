@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Form, Input, InputNumber, message, Modal, Space, Statistic, Table } from 'antd';
+import { Button, Card, Form, Input, InputNumber, message, Modal, Space, Statistic, Table, Tag } from 'antd';
 import { ArrowLeftOutlined, BankOutlined, DeleteOutlined, EditOutlined, DollarOutlined } from '@ant-design/icons';
 import { customerService } from '../services/customerService';
+import { bankerAPI } from '../services/api';
 import { Customer } from '../types/customer';
 import abayLogo from '../assets/abayLogo.jpg';
 
@@ -42,6 +43,8 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
     }
   };
 
+  const activeCustomers = customers.filter(c => c.status === 'Active' || !c.status).length;
+  const frozenCustomers = customers.filter(c => c.status === 'Frozen').length;
   const totalBalance = customers.reduce((sum, customer) => sum + customer.balance, 0);
 
   const handleEdit = (customer: Customer) => {
@@ -184,11 +187,23 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
       sorter: (a: Customer, b: Customer) => a.balance - b.balance,
     },
     {
-      title: 'Created At',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-      sorter: (a: Customer, b: Customer) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        let color = 'green';
+        let label = status || 'ACTIVE';
+        if (status === 'Frozen') {
+          color = 'red';
+          label = 'FROZEN';
+        } else if (status === 'Inactive') {
+          color = 'gray';
+          label = 'INACTIVE';
+        } else {
+          label = 'ACTIVE';
+        }
+        return <Tag color={color}>{label}</Tag>;
+      },
     },
     {
       title: 'Actions',
@@ -229,6 +244,25 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
           >
             Withdraw
           </Button>
+          {record.status === 'Frozen' ? (
+            <Button
+              type="default"
+              className="bg-blue-500 text-white hover:bg-blue-600"
+              onClick={() => handleStatusChange(record.id, 'Active')}
+              size="small"
+            >
+              Unfreeze
+            </Button>
+          ) : (
+            <Button
+              type="default"
+              danger
+              onClick={() => handleStatusChange(record.id, 'Frozen')}
+              size="small"
+            >
+              Freeze
+            </Button>
+          )}
           <Button
             type="primary"
             danger
@@ -242,6 +276,23 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
       ),
     },
   ];
+
+  const handleStatusChange = async (id: number, newStatus: string) => {
+    setLoading(true);
+    try {
+      await bankerAPI.updateStatus(id, newStatus);
+      const updatedCustomers = customers.map(c =>
+        c.id === id ? { ...c, status: newStatus } : c
+      );
+      setCustomers(updatedCustomers);
+      message.success(`Account ${newStatus === 'Frozen' ? 'frozen' : 'activated'} successfully`);
+    } catch (error) {
+      console.error(error);
+      message.error('Failed to update status');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
@@ -275,13 +326,21 @@ function BankerDashboard({ onBack, customers, setCustomers }: BankerDashboardPro
           </div>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className="shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <Card className="shadow-lg border-l-4 border-blue-500">
             <Statistic
-              title="Total Customers"
-              value={customers.length}
+              title="Active Customers"
+              value={activeCustomers}
               prefix={<BankOutlined />}
               valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+          <Card className="shadow-lg border-l-4 border-red-500">
+            <Statistic
+              title="Frozen Accounts"
+              value={frozenCustomers}
+              prefix={<DeleteOutlined />}
+              valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>
           <Card className="shadow-lg">

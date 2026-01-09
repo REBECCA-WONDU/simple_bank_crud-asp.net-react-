@@ -44,7 +44,11 @@ public class BankService
         var account = await _accountRepo.GetByIdAsync(accountId)
             ?? throw new Exception("Account not found");
 
+        if (account.Status == "Frozen")
+            throw new Exception("Account is frozen. Please contact the bank.");
+
         account.Balance += amount;
+        account.LastTransactionDate = DateTime.UtcNow;
 
         await _transactionRepo.AddAsync(new Transaction
         {
@@ -62,10 +66,14 @@ public class BankService
         var account = await _accountRepo.GetByIdAsync(accountId)
             ?? throw new Exception("Account not found");
 
+        if (account.Status == "Frozen")
+            throw new Exception("Account is frozen. Please contact the bank.");
+
         if (account.Balance < amount)
             throw new Exception("Insufficient balance");
 
         account.Balance -= amount;
+        account.LastTransactionDate = DateTime.UtcNow;
 
         await _transactionRepo.AddAsync(new Transaction
         {
@@ -110,6 +118,7 @@ public class BankService
             Id = c.Id,
             FullName = c.FullName,
             PhoneNumber = c.PhoneNumber,
+            Status = c.Account?.Status ?? "Active",
             Balance = c.Account?.Balance ?? 0,
             CreatedAt = DateTime.UtcNow // Placeholder as entity doesn't have it
         }).ToList();
@@ -131,6 +140,7 @@ public class BankService
             FullName = customer.FullName,
             PhoneNumber = customer.PhoneNumber,
             Password = customer.Password,
+            Status = customer.Account?.Status ?? "Active",
             Balance = customer.Account?.Balance ?? 0,
             CreatedAt = DateTime.UtcNow // Placeholder
         };
@@ -163,11 +173,15 @@ public class BankService
                 ?? throw new Exception("Receiver account not found");
         }
 
+        if (fromAccount.Status == "Frozen")
+            throw new Exception("Your account is frozen. Please contact the bank.");
+
         if (fromAccount.Balance < dto.Amount)
             throw new Exception("Insufficient balance");
 
         // Deduct from sender
         fromAccount.Balance -= dto.Amount;
+        fromAccount.LastTransactionDate = DateTime.UtcNow;
         await _transactionRepo.AddAsync(new Transaction
         {
             AccountId = fromAccount.Id,
@@ -178,6 +192,7 @@ public class BankService
 
         // Add to receiver
         toAccount.Balance += dto.Amount;
+        toAccount.LastTransactionDate = DateTime.UtcNow;
         await _transactionRepo.AddAsync(new Transaction
         {
             AccountId = toAccount.Id,
@@ -188,6 +203,18 @@ public class BankService
 
         await _accountRepo.UpdateAsync(fromAccount);
         await _accountRepo.UpdateAsync(toAccount);
+    }
+
+    public async Task UpdateAccountStatusAsync(int customerId, string newStatus)
+    {
+        var customer = await _customerRepo.GetByIdAsync(customerId)
+            ?? throw new Exception("Customer not found");
+
+        if (customer.Account == null)
+            throw new Exception("Customer has no account");
+
+        customer.Account.Status = newStatus;
+        await _accountRepo.UpdateAsync(customer.Account);
     }
     // Login Helper
     public async Task<BankerCustomerDto?> LoginAsync(string phoneNumber, string password)
@@ -202,6 +229,7 @@ public class BankService
             FullName = customer.FullName,
             PhoneNumber = customer.PhoneNumber,
             Password = customer.Password,
+            Status = customer.Account?.Status ?? "Active",
             Balance = customer.Account.Balance,
             CreatedAt = DateTime.UtcNow // Placeholder
         };
@@ -218,6 +246,7 @@ public class BankService
             FullName = customer.FullName,
             PhoneNumber = customer.PhoneNumber,
             Password = customer.Password,
+            Status = customer.Account?.Status ?? "Active",
             Balance = customer.Account.Balance,
             CreatedAt = DateTime.UtcNow // Placeholder
         };

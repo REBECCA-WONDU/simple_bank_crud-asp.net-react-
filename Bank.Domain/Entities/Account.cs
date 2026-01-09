@@ -8,6 +8,8 @@ public class Account
  public int Id { get; set; }
   public string? AccountNumber { get; set; }
   public decimal Balance { get; set; } = 0;
+  public string Status { get; set; } = "Active"; // Active, Inactive, Frozen
+  public DateTime LastTransactionDate { get; set; } = DateTime.UtcNow;
   public int CustomerId { get; set; }
   public Customer? Customer { get; set; } //is a navigation property that allows an account to access its owning customer object in code, representing a many-to-one relationship. or it means this account belongs to one customer.
 

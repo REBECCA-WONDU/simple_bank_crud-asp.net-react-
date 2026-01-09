@@ -5,61 +5,80 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bank.API.Controllers
 {
-  [ApiController]
-[Route("api/banker")]
-public class BankerController : ControllerBase
-{
-    private readonly BankService _service;
-
-    public BankerController(BankService service)
+    [ApiController]
+    [Route("api/banker")]
+    public class BankerController : ControllerBase
     {
-        _service = service;
-    }
+        private readonly BankService _service;
 
-    [HttpGet("customers")]
-    public async Task<IActionResult> GetAll()
-        => Ok(await _service.GetAllCustomersAsync());
-
-    [HttpPut("customer/{id}")]
-    public async Task<IActionResult> Update(int id, UpdateCustomerDto dto)
-    {
-        var updatedCustomer = await _service.UpdateCustomerAsync(id, dto);
-        return Ok(updatedCustomer);
-    }
-
-    [HttpDelete("customer/{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        await _service.DeleteCustomerAsync(id);
-        return Ok("Deleted");
-    }
-
-    [HttpPost("deposit/{id}")]
-    public async Task<IActionResult> Deposit(int id, [FromBody] TransactionDto dto)
-    {
-        try 
+        public BankerController(BankService service)
         {
-            await _service.DepositByCustomerIdAsync(id, dto.Amount);
-            return Ok("Deposit successful");
+            _service = service;
         }
-        catch (Exception ex)
+
+        [HttpGet("customers")]
+        public async Task<IActionResult> GetAll()
+            => Ok(await _service.GetAllCustomersAsync());
+
+        [HttpPut("customer/{id}")]
+        public async Task<IActionResult> Update(int id, UpdateCustomerDto dto)
         {
-            return BadRequest(ex.Message);
+            var updatedCustomer = await _service.UpdateCustomerAsync(id, dto);
+            return Ok(updatedCustomer);
+        }
+
+        [HttpDelete("customer/{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _service.DeleteCustomerAsync(id);
+            return Ok("Deleted");
+        }
+
+        [HttpPost("deposit/{id}")]
+        public async Task<IActionResult> Deposit(int id, [FromBody] TransactionDto dto)
+        {
+            try 
+            {
+                await _service.DepositByCustomerIdAsync(id, dto.Amount);
+                return Ok("Deposit successful");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("withdraw/{id}")]
+        public async Task<IActionResult> Withdraw(int id, [FromBody] TransactionDto dto)
+        {
+            try 
+            {
+                await _service.WithdrawByCustomerIdAsync(id, dto.Amount);
+                return Ok("Withdraw successful");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPatch("customer/{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusDto dto)
+        {
+            try
+            {
+                await _service.UpdateAccountStatusAsync(id, dto.Status);
+                return Ok(new { message = $"Account status updated to {dto.Status}" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 
-    [HttpPost("withdraw/{id}")]
-    public async Task<IActionResult> Withdraw(int id, [FromBody] TransactionDto dto)
+    public class UpdateStatusDto
     {
-        try 
-        {
-            await _service.WithdrawByCustomerIdAsync(id, dto.Amount);
-            return Ok("Withdraw successful");
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        public string Status { get; set; } = string.Empty;
     }
-}
 }
