@@ -1,5 +1,5 @@
 import { Button, Card } from 'antd';
-import { UserOutlined, BankOutlined } from '@ant-design/icons';
+import { UserOutlined } from '@ant-design/icons';
 import buildingImg from '../assets/building.png';
 import abayLogo from '../assets/abayLogo.jpg';
 
@@ -59,7 +59,11 @@ function HomePage({ onSelectRole }: HomePageProps) {
               onClick={() => onSelectRole('banker')}
             >
               <div className="text-center py-6">
-                <BankOutlined className="text-6xl text-blue-600 mb-6 group-hover:scale-110 transition-transform" />
+                <img
+                  src={abayLogo}
+                  alt="Banker Portal"
+                  className="w-16 h-16 object-contain mx-auto mb-6 group-hover:scale-110 transition-transform rounded-full shadow-sm"
+                />
                 <h2 className="text-2xl font-bold mb-3 text-gray-800">Banker</h2>
                 <p className="text-gray-500 mb-8 leading-relaxed">
                   Comprehensive management tools for processing customer accounts.
